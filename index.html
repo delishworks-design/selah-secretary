@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Selah Secretary</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500&display=swap" rel="stylesheet">
-<script src="supabase.js"></script>
 <style>
 :root{--ink:#1a2e2b;--muted:#7a9490;--line:#e6eeeb;--line2:#d1ddda;--soft:#f7f9f8;--paper:#fff;--teal:#0f766e;--teal-dark:#0c5e58;--teal-bg:#eef6f5;--red:#b42318;--r:14px;--serif:'Newsreader',serif;--sans:'Inter',sans-serif;--ease:cubic-bezier(.16,1,.3,1)}
 *{box-sizing:border-box}body{margin:0;background:var(--soft);color:var(--ink);font:14px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
@@ -119,7 +118,9 @@ dialog::backdrop{background:rgba(26,46,43,.28);backdrop-filter:blur(8px)}
 <script>
 const supabaseUrl = 'https://vggaswbjsmyvfheofnnj.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnZ2Fzd2Jqc215dmZoZW9mbm5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE2MzU5MDgsImV4cCI6MjEwNzIxMTkwOH0.5iV_nWSia3LaKSjTqoQtb8e3ZcAvJd8K3Vhg8b9Dwx4';
-const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
+const SB_URL=supabaseUrl, SB_KEY=supabaseAnonKey;
+function sbHeaders(extra){ const h={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}; if(extra) Object.assign(h,extra); return h; }
+async function sbFetch(path,opts){ opts=opts||{}; const r=await fetch(SB_URL+'/rest/v1/'+path, {method:opts.method||'GET', headers:sbHeaders(opts.headers||{}), body:opts.body}); if(!r.ok){ const t=await r.text(); throw new Error('HTTP '+r.status+' '+t.slice(0,120)); } if(r.status===204) return null; const ct=r.headers.get('content-type')||''; return ct.includes('json')? r.json() : r.text(); }
 const APP_VERSION='1.0.1', VERSION_URL='version.json', APP_URL='index.html';
 function verGt(a,b){
   const pa=String(a).split('.'),pb=String(b).split('.');
@@ -141,47 +142,40 @@ const debounce=(fn,ms)=>{let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>f
 
 async function load(){
   try{
-    const [cRes,mRes,pRes]=await Promise.all([
-      supabase.from('clients').select('id,name,position,email,phone,address,bio,is_published').order('created_at',{ascending:false}),
-      supabase.from('secretary_meta').select('*'),
-      supabase.from('records').select('*').eq('kind','prospect').order('id',{ascending:false})
+    const [cData,mData,pData]=await Promise.all([
+      sbFetch('clients?select=id,name,position,email,phone,address,bio,is_published&order=created_at.desc'),
+      sbFetch('secretary_meta?select=*'),
+      sbFetch('records?select=*&kind=eq.prospect&order=id.desc')
     ]);
-    if(cRes.error) console.error(cRes.error);
-    if(mRes.error) console.error(mRes.error);
-    if(pRes.error) console.error(pRes.error);
-    const meta={}; (mRes.data||[]).forEach(m=>meta[m.client_id]=m);
-    const clients=((cRes.data)||[]).map(c=>{
+    const meta={}; (mData||[]).forEach(m=>{meta[m.client_id]=m;});
+    const clients=(cData||[]).map(c=>{
       const m=meta[c.id]||{};
-      return {id:c.id,kind:'client',name:c.name||'',company:c.position||'',phone:c.phone||'',email:c.email||'',address:c.address||'',type:m.type||'Business',payment:m.payment||'unpaid',landing:m.landing||'none',work:m.work||'open',notes:m.notes!=null?m.notes:(c.bio||''),pstatus:'prospect',request:'',locked:true};
+      return {id:c.id,kind:'client',name:c.name||'',company:c.position||'',phone:c.phone||'',email:c.email||'',address:c.address||'',type:m.type||'Business',payment:m.payment||'unpaid',landing:m.landing||'none',work:m.work||'open',notes:(m.notes!=null?m.notes:(c.bio||'')),pstatus:'prospect',request:'',locked:true};
     });
-    const prospects=((pRes.data)||[]).map(p=>({...p,kind:'prospect',locked:false}));
-    recs=[...clients,...prospects];
-  }catch(e){console.error(e);recs=[]}
+    const prospects=(pData||[]).map(p=>{const r=Object.assign({},p); r.kind='prospect'; r.locked=false; return r;});
+    recs=clients.concat(prospects);
+  }catch(e){console.error(e);recs=[];}
 }
 async function saveRec(r){
   try{
     if(r.kind==='client'){
       const row={client_id:r.id,type:r.type,payment:r.payment,landing:r.landing,work:r.work,notes:r.notes,updated_at:new Date().toISOString()};
-      const {error}=await supabase.from('secretary_meta').upsert(row,{onConflict:'client_id'});
-      if(error){console.error(error);toast('Save failed: '+error.message);return false}
+      await sbFetch('secretary_meta',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=representation'},body:JSON.stringify(row)});
       return true;
     }
-    const {error}=await supabase.from('records').upsert(r, {onConflict:'id'});
-    if(error){console.error(error);toast('Save failed: '+error.message);return false}
+    await sbFetch('records',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=representation'},body:JSON.stringify(r)});
     return true;
-  }catch(e){console.error(e);toast('Save failed');return false}
+  }catch(e){console.error(e);toast('Save failed: '+e.message);return false;}
 }
 async function delRec(r){
   try{
     if(r.kind==='client'){
-      const {error}=await supabase.from('secretary_meta').delete().eq('client_id',r.id);
-      if(error){console.error(error);toast('Delete failed: '+error.message);return false}
+      await sbFetch('secretary_meta?client_id=eq.'+encodeURIComponent(r.id),{method:'DELETE'});
       return true;
     }
-    const {error}=await supabase.from('records').delete().eq('id',r.id);
-    if(error){console.error(error);toast('Delete failed: '+error.message);return false}
+    await sbFetch('records?id=eq.'+encodeURIComponent(r.id),{method:'DELETE'});
     return true;
-  }catch(e){console.error(e);toast('Delete failed');return false}
+  }catch(e){console.error(e);toast('Delete failed: '+e.message);return false;}
 }
 function toast(m,act){
   const el=$('#toast'); el.innerHTML=`<span>${esc(m)}</span>`+(act?`<button id="tu">${esc(act)}</button>`:'');
