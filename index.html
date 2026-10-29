@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Selah Secretary</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
 <style>
 :root{--ink:#1a2e2b;--muted:#7a9490;--line:#e6eeeb;--line2:#d1ddda;--soft:#f7f9f8;--paper:#fff;--teal:#0f766e;--teal-dark:#0c5e58;--teal-bg:#eef6f5;--red:#b42318;--r:14px;--serif:'Newsreader',serif;--sans:'Inter',sans-serif;--ease:cubic-bezier(.16,1,.3,1)}
 *{box-sizing:border-box}body{margin:0;background:var(--soft);color:var(--ink);font:14px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
@@ -93,7 +93,7 @@ dialog::backdrop{background:rgba(26,46,43,.28);backdrop-filter:blur(8px)}
     <label>Password</label><input id="p" type="password" autocomplete="current-password" required>
     <label class="chk"><input type="checkbox" id="sp"> Show password</label>
     <div class="err" id="le"></div>
-    <button class="btn" style="width:100%;margin-top:18px">Sign in</button>
+    <button type="submit" class="btn" style="width:100%;margin-top:18px">Sign in</button>
   </form>
 </section>
 
@@ -120,7 +120,7 @@ dialog::backdrop{background:rgba(26,46,43,.28);backdrop-filter:blur(8px)}
 const supabaseUrl = 'https://vggaswbjsmyvfheofnnj.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnZ2Fzd2Jqc215dmZoZW9mbm5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE2MzU5MDgsImV4cCI6MjEwNzIxMTkwOH0.5iV_nWSia3LaKSjTqoQtb8e3ZcAvJd8K3Vhg8b9Dwx4';
 const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
-const APP_VERSION='1.0.0', VERSION_URL='version.json', APP_URL='index.html';
+const APP_VERSION='1.0.1', VERSION_URL='version.json', APP_URL='index.html';
 function verGt(a,b){
   const pa=String(a).split('.'),pb=String(b).split('.');
   for(let i=0;i<Math.max(pa.length,pb.length);i++){
