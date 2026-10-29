@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500&display=swap" rel="stylesheet">
 <style>
 :root{--ink:#1a2e2b;--muted:#7a9490;--line:#e6eeeb;--line2:#d1ddda;--soft:#f7f9f8;--paper:#fff;--teal:#0f766e;--teal-dark:#0c5e58;--teal-bg:#eef6f5;--red:#b42318;--r:14px;--serif:'Newsreader',serif;--sans:'Inter',sans-serif;--ease:cubic-bezier(.16,1,.3,1)}
-*{box-sizing:border-box}body{margin:0;background:var(--soft);color:var(--ink);font:14px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}body{margin:0;background:var(--soft);color:var(--ink);font:14px/1.6 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
 h1{font-family:var(--serif);font-weight:500}
 input,textarea{width:100%;padding:12px 13px;border:1px solid var(--line2);border-radius:10px;background:var(--paper);transition:.18s}
 select{width:100%;padding:12px 13px;border:1px solid var(--line2);border-radius:10px;background:var(--paper);font-size:14px;min-height:44px;cursor:pointer}
@@ -43,7 +43,7 @@ nav button.on{color:var(--ink);border-top-color:var(--teal)}
 .search{position:relative;margin:14px 0}
 .search input{padding-left:40px;height:46px;border-radius:12px}
 .search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted)}
-.seg{display:flex;gap:4px;padding:4px;background:var(--soft);border:1px solid var(--line);border-radius:999px;width:fit-content;overflow:auto}
+.seg{display:flex;gap:4px;padding:4px;background:var(--soft);border:1px solid var(--line);border-radius:999px;width:fit-content;max-width:100%;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}
 .seg button{background:none;border:0;padding:7px 14px;border-radius:999px;font-size:13px;color:var(--muted);cursor:pointer;white-space:nowrap}
 .seg button.on{background:var(--paper);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08),0 0 0 1px var(--line)}
 .list{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:10px}
@@ -69,7 +69,7 @@ dialog::backdrop{background:rgba(26,46,43,.28);backdrop-filter:blur(8px)}
 .dlg-foot{padding:18px 28px 24px;display:flex;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line);margin-top:16px;background:var(--soft)}
 .dlg-foot .sp{flex:1}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-@media(max-width:600px){.two{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}main{padding:20px 16px 110px}dialog{width:100%;max-width:100%;border-radius:20px 20px 0 0;margin:auto 0 0}}
+@media(max-width:600px){.two{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}main{padding:20px 16px 110px}dialog{width:100%;max-width:100%;border-radius:20px 20px 0 0;margin:auto 0 0}.seg{width:100%}.filters{grid-template-columns:1fr}.item{padding:14px 16px}.meta span{font-size:11px}.bar{padding:12px 16px}.bar b{font-size:15px}}
 .lk{background:none;border:0;color:#3a5450;font-size:13px;cursor:pointer;padding:6px}
 .lk.red{color:var(--red)}
 .toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%) translateY(10px);background:#1a2e2b;color:#fff;padding:12px 16px;border-radius:12px;font-size:13px;display:flex;gap:10px;opacity:0;pointer-events:none;transition:.3s var(--ease);z-index:50}
@@ -121,7 +121,7 @@ const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 const SB_URL=supabaseUrl, SB_KEY=supabaseAnonKey;
 function sbHeaders(extra){ const h={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}; if(extra) Object.assign(h,extra); return h; }
 async function sbFetch(path,opts){ opts=opts||{}; const r=await fetch(SB_URL+'/rest/v1/'+path, {method:opts.method||'GET', headers:sbHeaders(opts.headers||{}), body:opts.body}); if(!r.ok){ const t=await r.text(); throw new Error('HTTP '+r.status+' '+t.slice(0,120)); } if(r.status===204) return null; const ct=r.headers.get('content-type')||''; return ct.includes('json')? r.json() : r.text(); }
-const APP_VERSION='1.0.2', VERSION_URL='version.json', APP_URL='index.html';
+const APP_VERSION='1.0.3', VERSION_URL='version.json', APP_URL='index.html';
 function verGt(a,b){
   const pa=String(a).split('.'),pb=String(b).split('.');
   for(let i=0;i<Math.max(pa.length,pb.length);i++){
@@ -152,7 +152,7 @@ async function load(){
       const m=meta[c.id]||{};
       return {id:c.id,kind:'client',name:c.name||'',company:c.position||'',phone:c.phone||'',email:c.email||'',address:c.address||'',type:m.type||'Business',payment:m.payment||'unpaid',landing:m.landing||'none',work:m.work||'open',notes:(m.notes!=null?m.notes:(c.bio||'')),pstatus:'prospect',request:'',locked:true};
     });
-    const prospects=(pData||[]).map(p=>{const r=Object.assign({},p); r.kind='prospect'; r.locked=false; return r;});
+    const prospects=(pData||[]).map(p=>{const r=Object.assign({},p); r.kind='prospect'; r.locked=false; r.name=r.name||''; r.company=r.company||''; r.phone=r.phone||''; r.email=r.email||''; r.address=r.address||''; r.notes=r.notes||''; r.type=r.type||'Business'; r.payment=r.payment||'unpaid'; r.landing=r.landing||'none'; r.work=r.work||'open'; r.pstatus=r.pstatus||'prospect'; r.request=r.request||''; return r;});
     recs=clients.concat(prospects);
   }catch(e){console.error(e);recs=[];}
 }
@@ -163,7 +163,8 @@ async function saveRec(r){
       await sbFetch('secretary_meta',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=representation'},body:JSON.stringify(row)});
       return true;
     }
-    await sbFetch('records',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=representation'},body:JSON.stringify(r)});
+    const row={id:r.id,kind:r.kind,name:r.name||'',company:r.company||'',phone:r.phone||'',email:r.email||'',address:r.address||'',notes:r.notes||'',type:r.type||'Business',payment:r.payment||'unpaid',landing:r.landing||'none',work:r.work||'open',pstatus:r.pstatus||'prospect',request:r.request||''};
+    await sbFetch('records',{method:'POST',headers:{'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=representation'},body:JSON.stringify(row)});
     return true;
   }catch(e){console.error(e);toast('Save failed: '+e.message);return false;}
 }
@@ -222,7 +223,7 @@ function render(){
   const m=$('#main');
   if(view==='dash'){
     const c=recs.filter(r=>r.kind==='client'), p=recs.filter(r=>r.kind==='prospect');
-    const rows=recs.filter(r=>(!f.dt||r.type===f.dt)&&(!f.dp||r.payment===f.dp)&&(!f.dl||r.landing===f.dl)).sort((a,b)=>b.id-a.id).slice(0, (f.dt||f.dp||f.dl)?80:6);
+    const rows=recs.filter(r=>(!f.dt||r.type===f.dt)&&(!f.dp||r.payment===f.dp)&&(!f.dl||r.landing===f.dl)).sort((a,b)=>(Number(b.id)||0)-(Number(a.id)||0)).slice(0, (f.dt||f.dp||f.dl)?80:6);
     m.innerHTML=`<h1 style="font-size:28px;margin:0">Dashboard</h1><div style="color:var(--muted);font-size:13px;margin-top:4px">${new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</div>
     <div class="stats"><div class="stat"><b>${c.length}</b><span>Clients</span></div><div class="stat"><b>${p.length}</b><span>Prospects</span></div><div class="stat"><b>${c.filter(r=>r.work==='open').length}</b><span>Open</span></div><div class="stat"><b>${c.filter(r=>r.work==='done').length}</b><span>Done</span></div></div>
     <div style="display:flex;gap:8px"><button class="btn sec" data-add="prospect">Add prospect</button></div>
@@ -239,7 +240,7 @@ function render(){
   }
   if(view==='clients'||view==='prospects'){
     const kind=view==='clients'?'client':'prospect', key='q_'+kind, all=recs.filter(r=>r.kind===kind);
-    const build=()=> list(all.filter(r=>match(r,f[key])&&(kind==='client'||!f.ps||r.pstatus===f.ps)).sort((a,b)=>a.name.localeCompare(b.name)), f[key], `No ${kind}s.`);
+    const build=()=> list(all.filter(r=>match(r,f[key])&&(kind==='client'||!f.ps||r.pstatus===f.ps)).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''))), f[key], `No ${kind}s.`);
     const seg=kind==='prospect'?`<div class="seg">${[['','All'],...Object.entries(PS)].map(([k,v])=>`<button data-ps="${k}" class="${(f.ps||'')===k?'on':''}">${esc(v)}</button>`).join('')}</div>`:'';
     m.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><h1 style="font-size:24px;margin:0">${cap(kind)}s</h1>${kind==='client'?'<span style="font-size:12px;color:var(--muted)">Synced from Selah</span>':`<button class="btn" data-add="${kind}">Add ${kind}</button>`}</div>
     <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="6"/><path d="M21 21l-3.5-3.5"/></svg><input id="q" type="search" placeholder="Search" value="${esc(f[key]||'')}" aria-label="Search"></div>

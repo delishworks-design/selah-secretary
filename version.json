@@ -1,5 +1,5 @@
 {
-  "version": "1.0.2",
-  "notes": "Persistent login (localStorage)",
+  "version": "1.0.3",
+  "notes": "Fix prospect save + mobile layout",
   "date": "2026-10-29"
 }
