@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Selah Secretary</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--ink:#1a2e2b;--muted:#7a9490;--line:#e6eeeb;--line2:#d1ddda;--soft:#f7f9f8;--paper:#fff;--teal:#0f766e;--teal-dark:#0c5e58;--teal-bg:#eef6f5;--red:#b42318;--r:14px;--serif:'Newsreader',serif;--sans:'Inter',sans-serif;--ease:cubic-bezier(.16,1,.3,1)}
+*{box-sizing:border-box}body{margin:0;background:var(--soft);color:var(--ink);font:14px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+h1{font-family:var(--serif);font-weight:500}
+input,textarea{width:100%;padding:12px 13px;border:1px solid var(--line2);border-radius:10px;background:var(--paper);transition:.18s}
+select{width:100%;padding:12px 13px;border:1px solid var(--line2);border-radius:10px;background:var(--paper);font-size:14px;min-height:44px;cursor:pointer}
+input:focus,select:focus,textarea:focus{border-color:var(--teal);box-shadow:0 0 0 4px var(--teal-bg);outline:0}
+label{display:block;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#3a5450;margin:18px 0 7px}
+.hide{display:none!important}
+#login{min-height:100svh;display:grid;place-items:center;padding:20px}
+.login-box{width:100%;max-width:360px;background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:32px 28px;box-shadow:0 12px 40px rgba(26,46,43,.08);animation:in .5s var(--ease)}
+@keyframes in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.btn{display:inline-flex;align-items:center;justify-content:center;background:var(--teal);color:#fff;border:0;border-radius:10px;min-height:44px;padding:0 18px;font-weight:500;cursor:pointer;transition:.18s}
+.btn:hover{background:var(--teal-dark);transform:translateY(-1px)}
+.btn:active{transform:scale(.98)}
+.btn.sec{background:var(--paper);color:var(--ink);border:1px solid var(--line2)}
+.btn.ghost{background:transparent;color:var(--muted);border:0}
+.chk{display:flex;gap:8px;align-items:center;margin-top:12px;font-size:13px;text-transform:none;letter-spacing:0;font-weight:400}
+.chk input{width:16px}
+.err{color:var(--red);font-size:13px;min-height:18px;margin-top:8px}
+header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.bar{max-width:760px;margin:auto;padding:14px 20px;display:flex;justify-content:space-between;align-items:center}
+.bar b{font:500 17px var(--serif)}
+main{max-width:760px;margin:auto;padding:28px 20px 120px;animation:in .35s var(--ease)}
+nav{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.96);backdrop-filter:blur(16px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0);z-index:10}
+.nav-inner{max-width:760px;margin:auto;display:grid;grid-template-columns:repeat(4,1fr)}
+nav button{background:none;border:0;border-top:2px solid transparent;padding:14px 0;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer}
+nav button.on{color:var(--ink);border-top-color:var(--teal)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin:20px 0}
+.stat{background:var(--paper);padding:16px}
+.stat b{font-family:var(--serif);font-size:26px;display:block}
+.stat span{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-top:6px;display:block}
+.filters{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
+@media(max-width:600px){.filters{grid-template-columns:1fr}}
+.filter-group label{margin:0 0 6px}
+.search{position:relative;margin:14px 0}
+.search input{padding-left:40px;height:46px;border-radius:12px}
+.search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.seg{display:flex;gap:4px;padding:4px;background:var(--soft);border:1px solid var(--line);border-radius:999px;width:fit-content;overflow:auto}
+.seg button{background:none;border:0;padding:7px 14px;border-radius:999px;font-size:13px;color:var(--muted);cursor:pointer;white-space:nowrap}
+.seg button.on{background:var(--paper);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08),0 0 0 1px var(--line)}
+.list{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:10px}
+.item{display:flex;justify-content:space-between;gap:12px;padding:16px 18px;background:var(--paper);border:1px solid var(--line);border-radius:12px;cursor:pointer;transition:.2s var(--ease);animation:in .4s var(--ease) both}
+.item:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(26,46,43,.08)}
+.item .t{font-weight:600}
+.item .co{color:var(--muted);margin-left:6px;font-weight:400}
+.meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;font-size:11.5px}
+.meta span{padding:3px 9px;border-radius:999px;background:var(--soft);border:1px solid var(--line);font-weight:500}
+.meta span.ok{background:#ecfdf3;border-color:#abefc6;color:#085d3a}
+.meta span.bad{background:#fef3f2;border-color:#fecdca;color:#9b1c1c}
+.meta a{color:inherit;text-decoration:underline;text-underline-offset:3px}
+.note{font-size:13px;margin-top:8px;color:#3a5450}
+.note.m{color:var(--muted)}
+.chev{color:var(--line2)}
+.empty{padding:48px 20px;text-align:center;background:var(--paper);border:1px dashed var(--line2);border-radius:var(--r);color:var(--muted)}
+mark{background:#fef9c3;padding:1px 3px;border-radius:3px}
+dialog{background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:0;width:min(540px,96vw);max-height:92vh;overflow:hidden;box-shadow:0 24px 64px rgba(26,46,43,.18)}
+dialog::backdrop{background:rgba(26,46,43,.28);backdrop-filter:blur(8px)}
+.dlg-scroll{overflow:auto;max-height:92vh}
+.dlg-head{padding:24px 28px 0}
+.dlg-body{padding:8px 28px}
+.dlg-foot{padding:18px 28px 24px;display:flex;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line);margin-top:16px;background:var(--soft)}
+.dlg-foot .sp{flex:1}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.two{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}main{padding:20px 16px 110px}dialog{width:100%;max-width:100%;border-radius:20px 20px 0 0;margin:auto 0 0}}
+.lk{background:none;border:0;color:#3a5450;font-size:13px;cursor:pointer;padding:6px}
+.lk.red{color:var(--red)}
+.toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%) translateY(10px);background:#1a2e2b;color:#fff;padding:12px 16px;border-radius:12px;font-size:13px;display:flex;gap:10px;opacity:0;pointer-events:none;transition:.3s var(--ease);z-index:50}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+.toast button{background:rgba(255,255,255,.12);border:0;color:#99f6e0;padding:6px 10px;border-radius:6px;font-weight:600;cursor:pointer}
+.upd{position:fixed;left:50%;top:14px;transform:translateX(-50%) translateY(-16px);width:min(680px,calc(100vw - 24px));background:var(--ink);color:#fff;border-radius:14px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;opacity:0;pointer-events:none;transition:.3s var(--ease);z-index:60;box-shadow:0 12px 40px rgba(0,0,0,.25)}
+.upd.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+.upd .upd-t{display:flex;flex-direction:column;gap:2px;font-size:13px}
+.upd .upd-t b{font-weight:600}
+.upd .upd-t span{color:#9fb8b4;font-size:12px}
+.upd .upd-a{display:flex;gap:8px;flex-wrap:wrap}
+.upd .btn.sec{background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.2)}
+</style>
+</head>
+<body>
+<section id="login">
+  <form id="lf" class="login-box" novalidate>
+    <h1>Selah Secretary</h1>
+    <label>Username</label><input id="u" autocomplete="username" required>
+    <label>Password</label><input id="p" type="password" autocomplete="current-password" required>
+    <label class="chk"><input type="checkbox" id="sp"> Show password</label>
+    <div class="err" id="le"></div>
+    <button class="btn" style="width:100%;margin-top:18px">Sign in</button>
+  </form>
+</section>
+
+<div id="app" class="hide">
+  <header><div class="bar"><b>Selah Secretary</b><div style="display:flex;align-items:center;gap:2px"><button class="btn ghost small" id="chk" title="Check for updates">v<span id="ver"></span></button><button class="btn ghost small" id="out">Sign out</button></div></div></header>
+  <main id="main"></main>
+  <nav><div class="nav-inner">
+    <button data-v="dash" class="on">Dashboard</button>
+    <button data-v="clients">Clients</button>
+    <button data-v="prospects">Prospects</button>
+    <button data-v="checker">Checker</button>
+  </div></nav>
+</div>
+
+<dialog id="dlg"><form id="rf" method="dialog" class="dlg-scroll"></form></dialog>
+<div class="toast" id="toast"></div>
+
+<div id="upd" class="upd hide" role="alert">
+  <div class="upd-t"><b>Update available</b><span id="upd-v"></span></div>
+  <div class="upd-a"><button class="btn" id="doUpd" style="min-height:36px;padding:0 14px">Update now</button><button class="btn sec" id="laterUpd" style="min-height:36px;padding:0 14px">Later</button></div>
+</div>
+
+<script>
+const supabaseUrl = 'https://vggaswbjsmyvfheofnnj.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnZ2Fzd2Jqc215dmZoZW9mbm5qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE2MzU5MDgsImV4cCI6MjEwNzIxMTkwOH0.5iV_nWSia3LaKSjTqoQtb8e3ZcAvJd8K3Vhg8b9Dwx4';
+const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
+const APP_VERSION='1.0.0', VERSION_URL='version.json', APP_URL='index.html';
+function verGt(a,b){
+  const pa=String(a).split('.'),pb=String(b).split('.');
+  for(let i=0;i<Math.max(pa.length,pb.length);i++){
+    const x=parseInt(pa[i]||'0',10)||0, y=parseInt(pb[i]||'0',10)||0;
+    if(x>y) return true; if(x<y) return false;
+  }
+  return false;
+}
+
+const PS={prospect:'Prospect',followup:'Follow-up',scheduled:'Scheduled',confirmed:'Confirmed',rejected:'Rejected'};
+const PAY=['unpaid','partial','paid'],LAND=['none','in progress','live'],WORK=['open','done'],TYPES=['Business','Church','Personal','Other'];
+let recs=[],view='dash',f={},undo=null;
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const cap=s=>s? s.charAt(0).toUpperCase()+s.slice(1):'';
+const map=a=>'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(a);
+const debounce=(fn,ms)=>{let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms)}};
+
+async function load(){
+  try{
+    const [cRes,mRes,pRes]=await Promise.all([
+      supabase.from('clients').select('id,name,position,email,phone,address,bio,is_published').order('created_at',{ascending:false}),
+      supabase.from('secretary_meta').select('*'),
+      supabase.from('records').select('*').eq('kind','prospect').order('id',{ascending:false})
+    ]);
+    if(cRes.error) console.error(cRes.error);
+    if(mRes.error) console.error(mRes.error);
+    if(pRes.error) console.error(pRes.error);
+    const meta={}; (mRes.data||[]).forEach(m=>meta[m.client_id]=m);
+    const clients=((cRes.data)||[]).map(c=>{
+      const m=meta[c.id]||{};
+      return {id:c.id,kind:'client',name:c.name||'',company:c.position||'',phone:c.phone||'',email:c.email||'',address:c.address||'',type:m.type||'Business',payment:m.payment||'unpaid',landing:m.landing||'none',work:m.work||'open',notes:m.notes!=null?m.notes:(c.bio||''),pstatus:'prospect',request:'',locked:true};
+    });
+    const prospects=((pRes.data)||[]).map(p=>({...p,kind:'prospect',locked:false}));
+    recs=[...clients,...prospects];
+  }catch(e){console.error(e);recs=[]}
+}
+async function saveRec(r){
+  try{
+    if(r.kind==='client'){
+      const row={client_id:r.id,type:r.type,payment:r.payment,landing:r.landing,work:r.work,notes:r.notes,updated_at:new Date().toISOString()};
+      const {error}=await supabase.from('secretary_meta').upsert(row,{onConflict:'client_id'});
+      if(error){console.error(error);toast('Save failed: '+error.message);return false}
+      return true;
+    }
+    const {error}=await supabase.from('records').upsert(r, {onConflict:'id'});
+    if(error){console.error(error);toast('Save failed: '+error.message);return false}
+    return true;
+  }catch(e){console.error(e);toast('Save failed');return false}
+}
+async function delRec(r){
+  try{
+    if(r.kind==='client'){
+      const {error}=await supabase.from('secretary_meta').delete().eq('client_id',r.id);
+      if(error){console.error(error);toast('Delete failed: '+error.message);return false}
+      return true;
+    }
+    const {error}=await supabase.from('records').delete().eq('id',r.id);
+    if(error){console.error(error);toast('Delete failed: '+error.message);return false}
+    return true;
+  }catch(e){console.error(e);toast('Delete failed');return false}
+}
+function toast(m,act){
+  const el=$('#toast'); el.innerHTML=`<span>${esc(m)}</span>`+(act?`<button id="tu">${esc(act)}</button>`:'');
+  el.classList.add('show');
+  if(act) $('#tu').onclick=()=>{ if(undo) undo(); undo=null; el.classList.remove('show'); };
+  clearTimeout(toast._t); toast._t=setTimeout(()=>el.classList.remove('show'), act?4000:2000);
+}
+function hl(t,q){ t=esc(t||''); q=(q||'').trim(); if(!q) return t; const e=esc(q).replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); try{return t.replace(new RegExp(e,'gi'),m=>'<mark>'+m+'</mark>')}catch{return t} }
+function match(r,q){ q=(q||'').trim().toLowerCase(); if(!q) return true; return [r.name,r.company,r.phone,r.email,r.address,r.notes,r.request,r.type].some(v=>(v||'').toLowerCase().includes(q)); }
+
+$('#sp').onchange=e=>{ $('#p').type=e.target.checked?'text':'password'; };
+function sess(){ try{return sessionStorage.getItem('selah_session')==='1'}catch{return false} }
+$('#lf').onsubmit=e=>{
+  e.preventDefault();
+  if($('#u').value.trim().toLowerCase()==='selahadmin' && $('#p').value.trim()==='selahadmin'){ try{sessionStorage.setItem('selah_session','1')}catch{} enter(); }
+  else $('#le').textContent='Invalid credentials.';
+};
+$('#out').onclick=()=>{ try{sessionStorage.removeItem('selah_session')}catch{} $('#app').classList.add('hide'); $('#login').classList.remove('hide'); };
+async function enter(){
+  $('#login').classList.add('hide');
+  $('#app').classList.remove('hide');
+  await load();
+  go('dash');
+}
+function go(v){
+  view=v;
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+  window.scrollTo({top:0,behavior:'smooth'});
+  render();
+}
+document.querySelectorAll('nav button').forEach(b=> b.addEventListener('click',()=> go(b.dataset.v)));
+
+function item(r,q,i){
+  const ph=r.phone?`<a href="tel:${esc(r.phone)}" onclick="event.stopPropagation()">${hl(r.phone,q)}</a>`:'';
+  const em=r.email?`<a href="mailto:${esc(r.email)}" onclick="event.stopPropagation()">${hl(r.email,q)}</a>`:'';
+  const ad=r.address?`<a href="${map(r.address)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${hl(r.address,q)}</a>`:'';
+  let pills=r.kind==='prospect'?`<span class="${r.pstatus==='confirmed'?'ok':r.pstatus==='rejected'?'bad':''}">${esc(PS[r.pstatus]||r.pstatus)}</span>`:`<span>Work ${esc(r.work)}</span><span class="${r.payment==='paid'?'ok':r.payment==='unpaid'?'bad':''}">${cap(esc(r.payment))}</span><span>Landing ${esc(r.landing)}</span>`;
+  pills+=`<span>${esc(r.type)}</span>`;
+  return `<li class="item" data-e="${r.id}" tabindex="0" style="animation-delay:${(i%10)*30}ms"><div style="min-width:0"><div><span class="t">${hl(r.name,q)}</span>${r.company?`<span class="co">${hl(r.company,q)}</span>`:''}</div><div class="meta">${pills}</div>${ph||em||ad?`<div class="meta" style="margin-top:8px">${ph?`<span>${ph}</span>`:''}${em?`<span>${em}</span>`:''}${ad?`<span>${ad}</span>`:''}</div>`:''}${r.request?`<div class="note">Request: ${hl(r.request,q)}</div>`:''}${r.notes?`<div class="note m">${hl(r.notes,q)}</div>`:''}</div><span class="chev">›</span></li>`;
+}
+const list=(l,q,msg)=> l.length? `<ul class="list">${l.map((r,i)=>item(r,q,i)).join('')}</ul>` : `<div class="empty">${esc(msg)}</div>`;
+
+function render(){
+  const m=$('#main');
+  if(view==='dash'){
+    const c=recs.filter(r=>r.kind==='client'), p=recs.filter(r=>r.kind==='prospect');
+    const rows=recs.filter(r=>(!f.dt||r.type===f.dt)&&(!f.dp||r.payment===f.dp)&&(!f.dl||r.landing===f.dl)).sort((a,b)=>b.id-a.id).slice(0, (f.dt||f.dp||f.dl)?80:6);
+    m.innerHTML=`<h1 style="font-size:28px;margin:0">Dashboard</h1><div style="color:var(--muted);font-size:13px;margin-top:4px">${new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</div>
+    <div class="stats"><div class="stat"><b>${c.length}</b><span>Clients</span></div><div class="stat"><b>${p.length}</b><span>Prospects</span></div><div class="stat"><b>${c.filter(r=>r.work==='open').length}</b><span>Open</span></div><div class="stat"><b>${c.filter(r=>r.work==='done').length}</b><span>Done</span></div></div>
+    <div style="display:flex;gap:8px"><button class="btn sec" data-add="prospect">Add prospect</button></div>
+    <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:32px 0 10px">${(f.dt||f.dp||f.dl)?'Filtered':'Recent'}</div>
+    <div class="filters">
+      <div class="filter-group"><label>Type</label><select id="f_dt"><option value="">All types</option>${TYPES.map(o=>`<option ${o===f.dt?'selected':''}>${o}</option>`).join('')}</select></div>
+      <div class="filter-group"><label>Payment</label><select id="f_dp"><option value="">All payments</option>${PAY.map(o=>`<option ${o===f.dp?'selected':''}>${o}</option>`).join('')}</select></div>
+      <div class="filter-group"><label>Landing</label><select id="f_dl"><option value="">All landing</option>${LAND.map(o=>`<option ${o===f.dl?'selected':''}>${o}</option>`).join('')}</select></div>
+    </div>
+    <div id="dashList">${list(rows,'', (f.dt||f.dp||f.dl)?'No results.':'No records yet.')}</div>`;
+    $('#f_dt').addEventListener('change',e=>{ f.dt=e.target.value; render(); });
+    $('#f_dp').addEventListener('change',e=>{ f.dp=e.target.value; render(); });
+    $('#f_dl').addEventListener('change',e=>{ f.dl=e.target.value; render(); });
+  }
+  if(view==='clients'||view==='prospects'){
+    const kind=view==='clients'?'client':'prospect', key='q_'+kind, all=recs.filter(r=>r.kind===kind);
+    const build=()=> list(all.filter(r=>match(r,f[key])&&(kind==='client'||!f.ps||r.pstatus===f.ps)).sort((a,b)=>a.name.localeCompare(b.name)), f[key], `No ${kind}s.`);
+    const seg=kind==='prospect'?`<div class="seg">${[['','All'],...Object.entries(PS)].map(([k,v])=>`<button data-ps="${k}" class="${(f.ps||'')===k?'on':''}">${esc(v)}</button>`).join('')}</div>`:'';
+    m.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><h1 style="font-size:24px;margin:0">${cap(kind)}s</h1>${kind==='client'?'<span style="font-size:12px;color:var(--muted)">Synced from Selah</span>':`<button class="btn" data-add="${kind}">Add ${kind}</button>`}</div>
+    <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="6"/><path d="M21 21l-3.5-3.5"/></svg><input id="q" type="search" placeholder="Search" value="${esc(f[key]||'')}" aria-label="Search"></div>
+    ${seg}<div id="lst">${build()}</div>`;
+    const qEl=$('#q');
+    qEl.addEventListener('input', debounce(e=>{ f[key]=e.target.value; $('#lst').innerHTML=build(); },120));
+    document.querySelectorAll('[data-ps]').forEach(b=> b.addEventListener('click',()=>{ f.ps=b.dataset.ps; render(); }));
+  }
+  if(view==='checker'){
+    m.innerHTML=`<h1 style="font-size:24px;margin:0">Checker</h1>
+    <div class="search" style="margin-top:16px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="6"/><path d="M21 21l-3.5-3.5"/></svg><input id="q" type="search" placeholder="Name, company, phone, address" value="${esc(f.cq||'')}" aria-label="Search all"></div>
+    <div id="lst" style="margin-top:12px"></div>`;
+    const qEl=$('#q');
+    const run=()=>{ const q=f.cq||''; $('#lst').innerHTML=!q.trim()?'':list(recs.filter(r=>match(r,q)), q, 'No match.'); };
+    qEl.addEventListener('input', debounce(e=>{ f.cq=e.target.value; run(); },120));
+    run();
+  }
+}
+
+$('#main').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(b&&b.dataset.add) return openForm(null,b.dataset.add);
+  if(e.target.closest('a')) return;
+  const li=e.target.closest('li[data-e]'); if(li) openForm(recs.find(r=>r.id==li.dataset.e));
+});
+$('#main').addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.matches('li[data-e]')) openForm(recs.find(r=>r.id==e.target.dataset.e)); });
+
+const fld=(id,lab,v,t,req,dis)=>`<label for="f_${id}">${esc(lab)}</label><input id="f_${id}" type="${t||'text'}" ${req?'required':''} ${dis?'disabled':''} value="${esc(v)}">`;
+const fsel=(id,lab,arr,cur)=>`<div><label for="f_${id}">${esc(lab)}</label><select id="f_${id}">${arr.map(o=>`<option ${o===cur?'selected':''}>${esc(o)}</option>`).join('')}</select></div>`;
+
+async function openForm(r,kind){
+  const isNew=!r;
+  r=r||{kind:kind||'client',name:'',company:'',phone:'',email:'',address:'',notes:'',type:'Business',payment:'unpaid',landing:'none',work:'open',pstatus:'prospect',request:''};
+  if(kind) r.kind=kind;
+  const p=r.kind==='prospect';
+  const lock=!!r.locked;
+  const dlg=$('#dlg'), form=$('#rf');
+  form.innerHTML=`
+    <div class="dlg-head"><h1 style="font-size:20px;margin:0">${isNew?'Add':'Edit'} ${esc(r.kind)}</h1>${lock?'<div style="font-size:12px;color:var(--muted);margin-top:4px">Profile fields come from Selah and are read-only here. Track status below.</div>':''}</div>
+    <div class="dlg-body">
+      ${fld('name','Name',r.name,'text',1,lock)}${fld('company','Company',r.company,'text',0,lock)}
+      <div class="two"><div>${fld('phone','Phone',r.phone,'tel',0,lock)}</div><div>${fld('email','Email',r.email,'email',0,lock)}</div></div>
+      ${fld('address','Address',r.address,'text',0,lock)}
+      <div class="two">${fsel('type','Type',TYPES,r.type)}${p?`<div><label>Status</label><select id="f_pstatus">${Object.keys(PS).map(k=>`<option value="${k}" ${k===r.pstatus?'selected':''}>${esc(PS[k])}</option>`).join('')}</select></div>`:fsel('work','Work',WORK,r.work)}</div>
+      ${p?`<label>Request</label><textarea id="f_request" rows="2">${esc(r.request)}</textarea>`:`<div class="two">${fsel('payment','Payment',PAY,r.payment)}${fsel('landing','Landing page',LAND,r.landing)}</div>`}
+      <label>Notes</label><textarea id="f_notes" rows="3">${esc(r.notes)}</textarea>
+    </div>
+    <div class="dlg-foot"><button class="btn">Save</button><button type="button" class="btn sec" id="cx">Cancel</button><span class="sp"></span>${!isNew&&p?`<button type="button" class="lk red" id="del">Delete</button>`:''}</div>`;
+  dlg.showModal();
+  $('#f_name').focus();
+  const grab=()=>{ ['name','company','phone','email','address','type','notes'].forEach(k=>r[k]=$(`#f_${k}`).value.trim()); if(p){r.pstatus=$('#f_pstatus').value; r.request=$('#f_request').value.trim()} else {r.work=$('#f_work').value; r.payment=$('#f_payment').value; r.landing=$('#f_landing').value} };
+  $('#cx').onclick=()=>dlg.close();
+  if($('#del')) $('#del').onclick=async()=>{ if(!confirm('Delete this prospect?')) return; const i=recs.indexOf(r); if(await delRec(r)){ recs.splice(i,1); dlg.close(); render(); undo=async()=>{ await saveRec(r); await load(); render(); }; toast('Deleted','Undo'); } };
+  form.onsubmit=async e=>{ e.preventDefault(); if(!$('#f_name').value.trim()) return; if(isNew&&r.kind==='client'){ toast('Clients are managed in Selah'); return; } grab(); if(isNew){ r.id=Date.now(); recs.push(r);} if(await saveRec(r)){ dlg.close(); await load(); render(); toast('Saved'); } };
+}
+const VER_EL=$('#ver'); if(VER_EL) VER_EL.textContent=APP_VERSION;
+async function fetchJSON(url){
+  const r=await fetch(url,{cache:'no-store'});
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  return r.json();
+}
+let pendingUpdate=null;
+function showUpdate(remote){
+  pendingUpdate=remote;
+  $('#upd-v').textContent='v'+remote.version+(remote.notes?' · '+remote.notes:'');
+  $('#upd').classList.remove('hide');
+  requestAnimationFrame(()=>$('#upd').classList.add('show'));
+}
+function hideUpdate(){ $('#upd').classList.remove('show'); setTimeout(()=>$('#upd').classList.add('hide'),300); }
+async function checkUpdates(silent){
+  if(VER_EL) VER_EL.textContent=APP_VERSION;
+  try{
+    const remote=await fetchJSON(VERSION_URL+'?t='+Date.now());
+    if(remote&&remote.version&&verGt(remote.version,APP_VERSION)){ showUpdate(remote); return true; }
+    if(!silent) toast('You are on the latest version (v'+APP_VERSION+')');
+    return false;
+  }catch(e){
+    if(!silent) toast('Update check failed: '+e.message);
+    return false;
+  }
+}
+async function applyUpdate(){
+  if(!pendingUpdate) return;
+  const btn=$('#doUpd'); if(btn){btn.disabled=true;btn.textContent='Updating…';}
+  try{
+    const r=await fetch(APP_URL+'?t='+Date.now(),{cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const html=await r.text();
+    if(!/Selah Secretary/i.test(html)||html.length<500) throw new Error('bad payload');
+    document.open(); document.write(html); document.close();
+  }catch(e){
+    if(btn){btn.disabled=false;btn.textContent='Update now';}
+    toast('Update failed, reloading…');
+    setTimeout(()=>location.reload(),800);
+  }
+}
+$('#chk').onclick=()=>checkUpdates(false);
+$('#doUpd').onclick=applyUpdate;
+$('#laterUpd').onclick=hideUpdate;
+checkUpdates(true);
+setInterval(()=>checkUpdates(true), 30*60*1000);
+if(sess()) enter();
+</script>
+</body>
+</html>
