@@ -121,7 +121,7 @@ const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 const SB_URL=supabaseUrl, SB_KEY=supabaseAnonKey;
 function sbHeaders(extra){ const h={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}; if(extra) Object.assign(h,extra); return h; }
 async function sbFetch(path,opts){ opts=opts||{}; const r=await fetch(SB_URL+'/rest/v1/'+path, {method:opts.method||'GET', headers:sbHeaders(opts.headers||{}), body:opts.body}); if(!r.ok){ const t=await r.text(); throw new Error('HTTP '+r.status+' '+t.slice(0,120)); } if(r.status===204) return null; const ct=r.headers.get('content-type')||''; return ct.includes('json')? r.json() : r.text(); }
-const APP_VERSION='1.0.1', VERSION_URL='version.json', APP_URL='index.html';
+const APP_VERSION='1.0.2', VERSION_URL='version.json', APP_URL='index.html';
 function verGt(a,b){
   const pa=String(a).split('.'),pb=String(b).split('.');
   for(let i=0;i<Math.max(pa.length,pb.length);i++){
@@ -187,13 +187,13 @@ function hl(t,q){ t=esc(t||''); q=(q||'').trim(); if(!q) return t; const e=esc(q
 function match(r,q){ q=(q||'').trim().toLowerCase(); if(!q) return true; return [r.name,r.company,r.phone,r.email,r.address,r.notes,r.request,r.type].some(v=>(v||'').toLowerCase().includes(q)); }
 
 $('#sp').onchange=e=>{ $('#p').type=e.target.checked?'text':'password'; };
-function sess(){ try{return sessionStorage.getItem('selah_session')==='1'}catch{return false} }
+function sess(){ try{return localStorage.getItem('selah_session')==='1'}catch{return false} }
 $('#lf').onsubmit=e=>{
   e.preventDefault();
-  if($('#u').value.trim().toLowerCase()==='selahadmin' && $('#p').value.trim()==='selahadmin'){ try{sessionStorage.setItem('selah_session','1')}catch{} enter(); }
+  if($('#u').value.trim().toLowerCase()==='selahadmin' && $('#p').value.trim()==='selahadmin'){ try{localStorage.setItem('selah_session','1')}catch{} enter(); }
   else $('#le').textContent='Invalid credentials.';
 };
-$('#out').onclick=()=>{ try{sessionStorage.removeItem('selah_session')}catch{} $('#app').classList.add('hide'); $('#login').classList.remove('hide'); };
+$('#out').onclick=()=>{ try{localStorage.removeItem('selah_session')}catch{} $('#app').classList.add('hide'); $('#login').classList.remove('hide'); };
 async function enter(){
   $('#login').classList.add('hide');
   $('#app').classList.remove('hide');

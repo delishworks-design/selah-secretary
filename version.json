@@ -1,5 +1,5 @@
 {
-  "version": "1.0.1",
-  "notes": "Bundled Supabase client (offline login fix)",
+  "version": "1.0.2",
+  "notes": "Persistent login (localStorage)",
   "date": "2026-10-29"
 }
