@@ -1,5 +1,5 @@
 {
-  "version": "1.0.3",
-  "notes": "Fix prospect save + mobile layout",
-  "date": "2026-10-29"
+  "version": "1.0.4",
+  "notes": "Bagong design (Selah NFC look) + live Supabase data",
+  "date": "2026-10-30"
 }
