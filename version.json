@@ -1,5 +1,5 @@
 {
-  "version": "1.0.4",
-  "notes": "Bagong design (Selah NFC look) + live Supabase data",
-  "date": "2026-10-30"
+  "version": "1.0.5",
+  "notes": "Fix dock/scroll layout, header refresh, resilient loading",
+  "date": "2026-11-02"
 }
